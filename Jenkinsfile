@@ -7,12 +7,19 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh "pip install -r requirements.txt"
+                script {
+                    // Ensure the virtual environment is created before installing dependencies
+                    sh 'python3 -m venv venv'
+                    sh './venv/bin/pip install -r requirements.txt'
+                }
             }
         }
         stage('Test') {
             steps {
-                sh "pytest"
+                // Run tests in the virtual environment
+                script {
+                    sh './venv/bin/pytest'
+                }
             }
         }
 
@@ -26,22 +33,30 @@ pipeline {
         stage('Deploy to Prod') {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'my-key-pair', usernameVariable: 'username')]) {
-                    sh '''
-                    scp -i $my-key-pair -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
-                    ssh -i $my-key-pair -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
-                        unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app/
-                        source app/venv/bin/activate
-                        cd /home/ubuntu/app/
-                        pip install -r requirements.txt
-                        sudo systemctl restart flaskapp.service
+                    script {
+                        // Ensure a virtual environment is created on the production server
+                        sh '''
+                        scp -i $my-key-pair -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
+                        ssh -i $my-key-pair -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
+                            # Ensure directory exists and extract app
+                            mkdir -p /home/ubuntu/app/
+                            unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app/
+                            
+                            # Create and activate virtual environment
+                            cd /home/ubuntu/app/
+                            python3 -m venv venv
+                            source venv/bin/activate
+                            
+                            # Install requirements inside the virtual environment
+                            pip install -r requirements.txt
+                            
+                            # Restart the service to apply changes
+                            sudo systemctl restart flaskapp.service
 EOF
-                    '''
+                        '''
+                    }
                 }
             }
         }
-       
-        
-       
-        
     }
 }
