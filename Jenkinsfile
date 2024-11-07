@@ -32,12 +32,12 @@ pipeline {
 
         stage('Deploy to Prod') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'my-key-pair', usernameVariable: 'username')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'nov2024', usernameVariable: 'username')]) {
                     script {
                         // Ensure a virtual environment is created on the production server
                         sh '''
-                        scp -i $my-key-pair -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
-                        ssh -i $my-key-pair -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
+                        scp -i $nov2024 -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
+                        ssh -i $nov2024 -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
                             # Ensure directory exists and extract app
                             mkdir -p /home/ubuntu/app/
                             unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app/
