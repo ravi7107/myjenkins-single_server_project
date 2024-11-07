@@ -25,10 +25,10 @@ pipeline {
 
         stage('Deploy to Prod') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'nov2024', usernameVariable: 'username')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ssh-key', keyFileVariable: 'my-key-pair', usernameVariable: 'username')]) {
                     sh '''
-                    scp -i $nov2024 -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
-                    ssh -i $nov2024 -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
+                    scp -i $my-key-pair -o StrictHostKeyChecking=no myapp.zip  ${username}@${SERVER_IP}:/home/ubuntu/
+                    ssh -i $my-key-pair -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << EOF
                         unzip -o /home/ubuntu/myapp.zip -d /home/ubuntu/app/
                         source app/venv/bin/activate
                         cd /home/ubuntu/app/
